@@ -1,0 +1,51 @@
+import Head from 'next/head'
+import Layout, { siteTitle } from '../../components/layout'
+import Code from '../../components/code'
+
+<Layout>
+
+# :wave: Hello, world!
+
+This is MDX!
+
+Let's say that we wanted to add an image.
+
+<img src="https://icatcare.org/app/uploads/2018/07/Thinking-of-getting-a-cat.png" style={{width: '450px', height: '300px'}}/>
+
+But then I carry in talking gibberish.
+
+Then you insert code and whatever.
+
+```css
+    p {
+        display: flex
+    }
+```
+
+```js
+    function() {
+        var a = 2 * 3;
+    }
+```
+
+```html
+    <div>
+        <p>Some html</p>
+    </div>
+```
+
+```swift
+    int() {
+        var a = 2;
+    }
+```
+
+</Layout>
+
+export const meta = {
+title: 'Markdown/MDX with Next.js Jen',
+author: 'Lee Robinson',
+id: 'somePost',
+description: 'This is a description of some post',
+date: '2020-12-08'
+}
