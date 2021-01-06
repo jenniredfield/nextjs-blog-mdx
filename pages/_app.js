@@ -4,7 +4,7 @@ import {MDXProvider} from '@mdx-js/react'
 import CodeBlock from '../components/code'
 
 const components = {
-  pre: (props) => <CodeBlock {...props}/>,
+  pre: (props) => <CodeBlock {...props} />,
 }
 
 export default ({Component, pageProps}) => {

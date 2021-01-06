@@ -1,0 +1,168 @@
+import Head from 'next/head'
+import Layout, { siteTitle } from '../../components/layout'
+
+<Layout>
+
+# How to use Loadable Components on a SSR React App
+
+Install   "@babel/plugin-syntax-dynamic-import" and "@loadable/babel-plugin". Added them to the babel config for the dynamic import syntax:
+
+```js
+{
+
+  "plugins": [
+    "@babel/plugin-syntax-dynamic-import",
+    "@loadable/babel-plugin"
+    //....
+  ]
+}
+```
+
+
+Install loadable components for webpack @loadable/webpack-plugin. Added it to the client.webpack.js configuration. We added writeToDisk true as this helped with development mode. The webpack plugins property will look like this:
+
+```js
+// client.webpack.config.js
+const LoadablePlugin = require('@loadable/webpack-plugin');
+
+const config = { 
+	...
+	plugins:  [new LoadablePlugin({ writeToDisk: true })]
+}
+```
+
+We also needed to separate the app into different entry points, so webpack wouldn’t bundle any imports for one page into another. We then created entry points for each route, for example they would be pageOne.jsx, pageTwo.tsx, pageThree.tsx. The entry point would look something like this:
+
+```js
+// client.wepback.config.js
+ entry: {
+   pageOne:
+     mode === 'development'
+       ? ['react-hot-loader/patch', './src/client/pageOne.index.tsx']
+       : ['./src/client/pageOne.index.tsx'],
+   pageTwo:
+     mode === 'development'
+       ? ['react-hot-loader/patch', './src/client/pageTwo.index.tsx']
+       : ['./src/client/pageTwo.index.tsx'],
+   pageThree:
+     mode === 'development'
+       ? [
+           'react-hot-loader/patch',
+           './src/client/pageThree.index.tsx'
+         ]
+       : ['./src/client/pageThree.index.tsx']
+ },
+ ```
+
+We did this because if we only had one index.tsx and this component imported all routes (pageOne, pageTwo, pageThree) they would all be included in the same bundle, and this is what we are trying to separaate. Every entry file looks exactly the same, except its importing only the components it needs for each route.
+
+```js
+// pageOne.index.tsx
+import react from 'react';
+import PageOneApp from '../routeOneApp';
+import { loadableReady } from '@loadable/component';
+//...
+
+loadableReady(() => {
+ renderMethod(
+   <Provider store={store}>
+     <PageOneApp
+       data={data}
+     />
+   </Provider>,
+   document.getElementById('root')
+ );
+});
+```
+
+With this system in place, webpack now at build time will generate a file loadable-stats.json
+And save it to the public folder.
+
+We need to do a bit of setting up in the server now to get the scripts and css files in need in order to inject this on our page response. The loadable components documentation has a good explanation for this but here is an example of how this would work in our scenario.
+
+```js
+// ...
+import { ChunkExtractor } from '@loadable/server';
+import { renderToString } from 'react-dom/server';
+
+app.get('/', async (req, res, next) => {
+   const routingParams = req.params;
+   const { pageRoute } = routingParams;
+
+
+   let markup: string;
+
+   const statsFile = path.resolve(__dirname, '../../public/assets/loadable-stats.json');
+   let extractor;
+
+   let contentComponent: ReactElement;
+
+   if (pageRoute === 'pageOne') {
+     extractor = new ChunkExtractor({ statsFile, entrypoints: 'pageOne' });
+     contentComponent = <PageOneApp />;
+   }
+
+   if (pageRoute === 'pageTwo') {
+     extractor = new ChunkExtractor({ statsFile, entrypoints: 'pageTwo' });
+     contentComponent = (
+       <PageTwoApp />
+     );
+   }
+
+   if (pageRoute === 'pageThree') {
+     extractor = new ChunkExtractor({ statsFile, entrypoints: 'pageThree'] });
+     contentComponent = <PageThreeApp />;
+   }
+
+   try {
+     const jsx = (
+       <Provider store={store}>
+         {contentComponent}
+       </Provider>
+     );
+
+     markup = renderToString(jsx);
+   } catch (error) {
+     return next(error);
+   }
+
+   const scriptTags = extractor.getScriptTags();
+   const linkTags = extractor.getLinkTags();
+   const styleTags = extractor.getStyleTags();
+
+   return res.status(200).send(
+     `
+     <!doctype html>
+     <html lang="en">
+       <head>
+         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+         <meta charset="utf-8" />
+         <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1.0, user-scalable=no">
+         ${linkTags}
+         ${styleTags}
+
+       </head>
+       <body>
+         <div id="root">${markup}</div>
+
+         ${scriptTags}
+    
+       </body>
+     </html>
+     `
+   );
+ });
+```
+
+That's it!
+
+
+</Layout>
+
+export const meta = {
+title: 'How to use Loadable Components with SSR React App',
+author: 'J Bird, Ruben Fernandez',
+id: 'loadable-components-ssr',
+description: 'In this blog post, we will talk through setting up loadable compoents in a SSR React app',
+date: '2021-01-05'
+}
