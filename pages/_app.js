@@ -8,7 +8,8 @@ const components = {
 }
 
 export default ({Component, pageProps}) => {
-  return (<MDXProvider components={components}>
+  return (
+  <MDXProvider components={components}>
     <Component {...pageProps} />
   </MDXProvider>)
 }

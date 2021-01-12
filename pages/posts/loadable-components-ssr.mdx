@@ -92,7 +92,8 @@ app.get('/', async (req, res, next) => {
 
    let markup: string;
 
-   const statsFile = path.resolve(__dirname, '../../public/assets/loadable-stats.json');
+   const statsFile = path.resolve(__dirname, 
+   '../../public/assets/loadable-stats.json');
    let extractor;
 
    let contentComponent: ReactElement;
@@ -137,16 +138,14 @@ app.get('/', async (req, res, next) => {
        <head>
          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
          <meta charset="utf-8" />
-         <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1.0, user-scalable=no">
+         <meta name="viewport" content="width=device-width,
+         initial-scale=1, maximum-scale=1.0, user-scalable=no">
          ${linkTags}
          ${styleTags}
-
        </head>
        <body>
          <div id="root">${markup}</div>
-
          ${scriptTags}
-    
        </body>
      </html>
      `

@@ -28,7 +28,7 @@ export default function Home({ postsData = [] }) {
         {postsData.length
           ? postsData.map((post) => {
               return (
-                <li key={post.id}>
+                <li key={post.id} className={utilStyles.list}>
                   <Link href={`/posts/${post.id}`}>
                     <div>
                       <p>{post.title}</p>
