@@ -20,21 +20,21 @@ export default function Home({ postsData = [] }) {
       <Head>
         <title>{siteTitle}</title>
       </Head>
-      <section className={utilStyles.headingMd}>
+      {/* <section className={utilStyles.headingMd}>
         <p>Hello, this is Padawan Dev here</p>
         <p>A blog to share what we learned in the day.</p>
-      </section>
+      </section> */}
       <ul>
         {postsData.length
           ? postsData.map((post) => {
               return (
                 <li key={post.id} className={utilStyles.list}>
                   <Link href={`/posts/${post.id}`}>
-                    <div>
-                      <p>{post.title}</p>
+                    <>
+                      <p className={utilStyles.listTitle}>{post.title}</p>
                       <p>{post.description}</p>
-                      <Date dateString={post.date} />
-                    </div>
+                      <Date dateString={post.date} classNames={utilStyles.listSmaller} />
+                    </>
                   </Link>
                 </li>
               );
