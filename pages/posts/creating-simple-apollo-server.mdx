@@ -5,6 +5,8 @@ import Layout, { siteTitle } from '../../components/layout'
 
 # Creating a Simple Apollo Server
 
+<Date>2021-02-08</Date>
+
 Are you also curious about creating your first Apollo server? Let’s dive right in.
 
 Create a new folder and initialize npm:
@@ -17,7 +19,7 @@ npm init --yes
 Create a index.js file to be our starting point:
 
 ```
-Touch index.js
+touch index.js
 ```
 
 Install the dependencies we need:
@@ -29,7 +31,6 @@ npm install apollo-server graphql
 We now need to import the apollo server and graphql to be able to use it. We also need to define the schema of our application. We can do so with the code below:
 
 ```js
-
 const { ApolloServer, gql } = require('apollo-server');
  
 const typeDefs = gql`
@@ -54,7 +55,6 @@ We also need to define a type structure for any query we want to set up in our a
 For simplicity sake, let’s hardcode and define the data our server will return for now. We can have a simple example like this:
 
 ```js
-
 const countryToReturn = {
    name: 'Colombia',
    population: 100000,
@@ -67,7 +67,6 @@ const countryToReturn = {
 Right. We defined types and even hardcoded some data to be returned, but our apollo server still wouldn’t know what data it needs to return when. To solve this, we create resolvers. You can create one like the one below. As we are only returning one item, in this example the resolver is quite simple.
 
 ```js
-
 const resolvers = {
    Query: {
      country: () => countryToReturn,
@@ -78,7 +77,6 @@ const resolvers = {
 Now we need to create our apollo server and pass the resolver and our typeDefs into it.
 
 ```js
-
 const server = new ApolloServer({ typeDefs, resolvers });
  
 server.listen().then(({ url }) => {
@@ -98,7 +96,6 @@ We can also create our first query to fetch some country information. We can cre
 
 
 ```js
-
 query getCountry {
   country {
     name
@@ -116,7 +113,7 @@ export const meta = {
   title: 'Creating a Simple Apollo Server',
   author: 'J Bird',
   id: 'creating-simple-apollo-server',
-  description: 'Today we will have a look at creating a simple apollo server and query some data.',
+  description: 'Today we will have a look at creating a simple apollo server and querying some data from it.',
   date: '2021-02-08',
   tags: ['javascript', 'apollo', 'server', 'graphql']
 }

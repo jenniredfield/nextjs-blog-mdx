@@ -20,10 +20,6 @@ export default function Home({ postsData = [] }) {
       <Head>
         <title>{siteTitle}</title>
       </Head>
-      {/* <section className={utilStyles.headingMd}>
-        <p>Hello, this is Padawan Dev here</p>
-        <p>A blog to share what we learned in the day.</p>
-      </section> */}
       <ul>
         {postsData.length
           ? postsData.map((post) => {

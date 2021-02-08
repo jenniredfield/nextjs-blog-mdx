@@ -1,4 +1,3 @@
-// src/CodeBlock.js
 import React from 'react'
 import Highlight, {defaultProps} from 'prism-react-renderer'
 
@@ -7,7 +6,7 @@ export default ({children}) => {
   return (
     <Highlight {...defaultProps} code={children.props.children} language={lang}>
       {({className, style, tokens, getLineProps, getTokenProps}) => (
-        <pre className={className} style={{...style, padding: '20px', fontSize: '16px'}}>
+        <pre className={className} style={{...style, padding: '20px', fontSize: '16px', margin: '2em 0'}}>
           {tokens.map((line, i) => (
             <div key={i} {...getLineProps({line, key: i})}>
               {line.map((token, key) => (
