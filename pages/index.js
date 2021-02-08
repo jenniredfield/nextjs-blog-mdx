@@ -30,11 +30,11 @@ export default function Home({ postsData = [] }) {
               return (
                 <li key={post.id} className={utilStyles.list}>
                   <Link href={`/posts/${post.id}`}>
-                    <>
+                    <div>
                       <p className={utilStyles.listTitle}>{post.title}</p>
                       <p>{post.description}</p>
                       <Date dateString={post.date} classNames={utilStyles.listSmaller} />
-                    </>
+                    </div>
                   </Link>
                 </li>
               );

@@ -1,0 +1,122 @@
+import Head from 'next/head'
+import Layout, { siteTitle } from '../../components/layout'
+
+<Layout>
+
+# Creating a Simple Apollo Server
+
+Are you also curious about creating your first Apollo server? Let’s dive right in.
+
+Create a new folder and initialize npm:
+
+
+```
+npm init --yes
+```
+
+Create a index.js file to be our starting point:
+
+```
+Touch index.js
+```
+
+Install the dependencies we need:
+
+```
+npm install apollo-server graphql
+```
+
+We now need to import the apollo server and graphql to be able to use it. We also need to define the schema of our application. We can do so with the code below:
+
+```js
+
+const { ApolloServer, gql } = require('apollo-server');
+ 
+const typeDefs = gql`
+ 
+ type Country {
+     name: String
+     population: Int
+     languages: [String]
+     flagImg: String
+ }
+ 
+ type Query {
+     country: Country
+ }
+`
+``` 
+
+We need to define a structure for our data, in this case is Country. I defined this structure will have the fields name, population, languages and flagImg with their respective types. Note in graphql you don’t end a fields with a semi colon.
+
+We also need to define a type structure for any query we want to set up in our application. In this case I set up a query ‘country’ that will return a structure of country.
+
+For simplicity sake, let’s hardcode and define the data our server will return for now. We can have a simple example like this:
+
+```js
+
+const countryToReturn = {
+   name: 'Colombia',
+   population: 100000,
+   languages: ['spanish'],
+   flagImg: "https://restcountries.eu/data/col.svg"
+}
+```
+ 
+
+Right. We defined types and even hardcoded some data to be returned, but our apollo server still wouldn’t know what data it needs to return when. To solve this, we create resolvers. You can create one like the one below. As we are only returning one item, in this example the resolver is quite simple.
+
+```js
+
+const resolvers = {
+   Query: {
+     country: () => countryToReturn,
+   },
+ };
+ ```
+
+Now we need to create our apollo server and pass the resolver and our typeDefs into it.
+
+```js
+
+const server = new ApolloServer({ typeDefs, resolvers });
+ 
+server.listen().then(({ url }) => {
+ console.log(`🚀  Server ready at ${url}`);
+});
+```
+
+We can launch our server like this
+
+```
+node index.js
+```
+
+Now we can go on our browser and navigate to localhost:4000/
+
+We can also create our first query to fetch some country information. We can create a new query using the keyword query and call it whatever we want, in this example I called it getCountry. We then pass in what we want to query, in this case country, and inside it I can specify what fields I want.
+
+
+```js
+
+query getCountry {
+  country {
+    name
+    languages
+    population
+  }
+}
+```
+
+That’s it for now!
+
+</Layout>
+
+export const meta = {
+  title: 'Creating a Simple Apollo Server',
+  author: 'J Bird',
+  id: 'creating-simple-apollo-server',
+  description: 'Today we will have a look at creating a simple apollo server and query some data.',
+  date: '2021-02-08',
+  tags: ['javascript', 'apollo', 'server', 'graphql']
+}
