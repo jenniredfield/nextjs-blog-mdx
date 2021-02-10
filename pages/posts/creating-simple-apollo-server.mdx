@@ -12,19 +12,19 @@ Are you also curious about creating your first Apollo server? Let’s dive right
 Create a new folder and initialize npm:
 
 
-```
+```shell
 npm init --yes
 ```
 
 Create a index.js file to be our starting point:
 
-```
+```bash
 touch index.js
 ```
 
 Install the dependencies we need:
 
-```
+```bash
 npm install apollo-server graphql
 ```
 
@@ -86,7 +86,7 @@ server.listen().then(({ url }) => {
 
 We can launch our server like this
 
-```
+```bash
 node index.js
 ```
 
@@ -95,7 +95,7 @@ Now we can go on our browser and navigate to localhost:4000/
 We can also create our first query to fetch some country information. We can create a new query using the keyword query and call it whatever we want, in this example I called it getCountry. We then pass in what we want to query, in this case country, and inside it I can specify what fields I want.
 
 
-```js
+```graphql
 query getCountry {
   country {
     name

@@ -6,8 +6,8 @@ export default ({children}) => {
   return (
     <Highlight {...defaultProps} code={children.props.children} language={lang}>
       {({className, style, tokens, getLineProps, getTokenProps}) => (
-        <pre className={className} style={{...style, padding: '20px', fontSize: '16px', margin: '2em 0'}}>
-          {tokens.map((line, i) => (
+        <pre className={className} style={{...style, padding: '20px', fontSize: '16px'}}>
+          {tokens.map((line, i) => line[0].empty ? null : (
             <div key={i} {...getLineProps({line, key: i})}>
               {line.map((token, key) => (
                 <span key={key} {...getTokenProps({token, key})} />
