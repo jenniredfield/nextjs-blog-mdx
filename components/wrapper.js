@@ -14,7 +14,7 @@ export default function Layout({ children, home }) {
         <link rel="icon" href="/favicon.ico" />
         <meta
           name="description"
-          content="Padawan dev"
+          content="Bird dev"
         />
         <meta
           property="og:image"
@@ -24,6 +24,7 @@ export default function Layout({ children, home }) {
         />
         <meta name="og:title" content={siteTitle} />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="viewport" content="initial-scale=1.0, width=device-width"></meta>
       </Head>
       <header className={styles.header}>
         {home ? (
