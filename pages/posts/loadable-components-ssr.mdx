@@ -3,11 +3,23 @@ import Layout, { siteTitle } from '../../components/wrapper'
 
 <Layout>
 
-# How to use Loadable Components on a SSR React App
+# How to use Loadable Components and code splitting in a SSR React App
 
-Install   "@babel/plugin-syntax-dynamic-import" and "@loadable/babel-plugin". Added them to the babel config for the dynamic import syntax:
+Let's say you are working on a SSR react application that is not currently splitted and you were given the task to make it faster / lighter. As your application grows,
+so does your bundle and it eventually the time comes that you need to start splitting it. Enter Loadable Components - this is the library recommended by the
+React team to split your app.
+
+To get started, we need a few babel plugins. If your app doesn't support dynamic imports syntax, you'll need to install this plugin. You will also need a plugin to run loadable component functionality.
+We can install these like this:
 
 ```js
+npm install @babel/plugin-syntax-dynamic-import @loadable/babel-plugin
+```
+
+And add them to the babel config:
+
+```js
+// .babelrc
 {
 
   "plugins": [
@@ -18,20 +30,31 @@ Install   "@babel/plugin-syntax-dynamic-import" and "@loadable/babel-plugin". Ad
 }
 ```
 
+Install loadable components for webpack @loadable/webpack-plugin.
 
-Install loadable components for webpack @loadable/webpack-plugin. Added it to the client.webpack.js configuration. We added writeToDisk true as this helped with development mode. The webpack plugins property will look like this:
+```
+npm install @loadable/webpack-plugin
+```
+
+Added it to the client.webpack.js configuration. We added '{writeToDisk: true}' as this helps with development mode. If this option is not there, when running
+in development mode your server won't be able to find essential files to run your app. The webpack plugins will look like this in your webpack client file:
 
 ```js
 // client.webpack.config.js
+
 const LoadablePlugin = require('@loadable/webpack-plugin');
 
-const config = { 
+const config = {
 	...
 	plugins:  [new LoadablePlugin({ writeToDisk: true })]
 }
 ```
 
-We also needed to separate the app into different entry points, so webpack wouldn’t bundle any imports for one page into another. We then created entry points for each route, for example they would be pageOne.jsx, pageTwo.tsx, pageThree.tsx. The entry point would look something like this:
+With this system in place, webpack now at build time will generate a file loadable-stats.json and save it to the public folder (or whatver folder has all the client side assets).
+
+In our case, we don't want to have our app as a Single Page Application. For different routes we will dispatch different set of files, and a new request will be
+made to the server. To do this, we need to separate the app into different entry points, so webpack won't bundle any imports for one page into another.
+In this exxample we are creating the entry points pageOne.jsx, pageTwo.tsx, pageThree.tsx. In this case, they would look like something like this:
 
 ```js
 // client.wepback.config.js
@@ -52,9 +75,12 @@ We also needed to separate the app into different entry points, so webpack would
          ]
        : ['./src/client/pageThree.index.tsx']
  },
- ```
+```
 
-We did this because if we only had one index.tsx and this component imported all routes (pageOne, pageTwo, pageThree) they would all be included in the same bundle, and this is what we are trying to separaate. Every entry file looks exactly the same, except its importing only the components it needs for each route.
+We did this because if we only had one index.tsx and this component imported components for other routes, they would all be included in the same bundle,
+and this is what we are trying to separaate. Every entry file looks exactly the same, except its importing only the components it needs for each route.
+
+With this in place we can move on to our pageOne.index.tsx. Here we have to use the loadableReady function in our top level component to be able to use it.
 
 ```js
 // pageOne.index.tsx
@@ -63,22 +89,56 @@ import PageOneApp from '../routeOneApp';
 import { loadableReady } from '@loadable/component';
 //...
 
+const renderMethod = module.hot ? render : hydrate;
+
 loadableReady(() => {
- renderMethod(
-   <Provider store={store}>
-     <PageOneApp
-       data={data}
-     />
-   </Provider>,
-   document.getElementById('root')
- );
+  renderMethod(
+    <Provider store={store}>
+      <PageOneApp data={data} />
+    </Provider>,
+    document.getElementById('root')
+  );
 });
 ```
 
-With this system in place, webpack now at build time will generate a file loadable-stats.json
-And save it to the public folder.
+With the above ready we can lazy load components later on in our code, using the loadable function provided by the Loadable library.
+For example to split and lazy load a component inside our PageOneApp component:
 
-We need to do a bit of setting up in the server now to get the scripts and css files in need in order to inject this on our page response. The loadable components documentation has a good explanation for this but here is an example of how this would work in our scenario.
+```js
+// PageOneApp.jsx
+import loadable from '@loadable/component';
+
+const LazyLoadedCategory = loadable(() => import('./LazyLoadedCategory'));
+
+const PageOneApp = () => {
+  // ... etc
+  return (
+    <div>
+      <div>Other section...</div>
+      <LazyLoadedCategory/>
+    </div>
+  )
+}
+```
+
+We also need to do a bit of setting up in the server now to get the scripts and css files in need in order to inject this on our page response. For this,
+we first need to make sure we have the '@loadable/server' and 'react-dom/server' libraries:
+
+```
+npm install @loadable/server react-dom/server
+```
+
+The loadable components documentation has a [good explanation](https://loadable-components.com/docs/server-side-rendering/) for this but we will go over it briefly. `@loadable/server` gives us a function 'ChunkExtractor'
+that takes the loadable.stats.json file and an entry point.
+
+With these arguments in place, it will find all the scripts and css files related to this entry point.
+It then spits out the tags you need (no need to manually injecting scripts in the DOM).
+
+In our case, we have 3 different entry points so when our server has a request, it figures out what route and what entry point to use to extract the files,
+and then injects it in the DOM. We also sent a markup ready with using the renderToString function,
+that spits out a html string of your components - this will be the intial html page, and the js scripts later will 'hydrate' your site.
+
+Here is an example of how this would work in our scenario.
 
 ```js
 // ...
@@ -92,7 +152,7 @@ app.get('/', async (req, res, next) => {
 
    let markup: string;
 
-   const statsFile = path.resolve(__dirname, 
+   const statsFile = path.resolve(__dirname,
    '../../public/assets/loadable-stats.json');
    let extractor;
 
@@ -155,14 +215,14 @@ app.get('/', async (req, res, next) => {
 
 That's it!
 
-
 </Layout>
 
 export const meta = {
-  title: 'How to use Loadable Components with SSR React App',
+  title: 'How to use Loadable Components and code splitting in a SSR React App',
   author: 'J Bird, Ruben Fernandez',
   id: 'loadable-components-ssr',
-  description: 'In this blog post, we will talk through setting up loadable components in a SSR React app.',
+  description:
+    'In this blog post, we will talk through setting up loadable components in a SSR React app.',
   date: '2021-01-05',
-  tags: ['javascript', 'react', 'ssr']
-}
+  tags: ['javascript', 'react', 'ssr', 'code splitting'],
+};
