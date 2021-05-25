@@ -145,47 +145,39 @@ Here is an example of how this would work in our scenario.
 import { ChunkExtractor } from '@loadable/server';
 import { renderToString } from 'react-dom/server';
 
-app.get('/', async (req, res, next) => {
-   const routingParams = req.params;
-   const { pageRoute } = routingParams;
-
-
-   let markup: string;
+app.get('/', (req, res, next) => {
+   const route = req.params;
+   const { page } = route;
 
    const statsFile = path.resolve(__dirname,
-   '../../public/assets/loadable-stats.json');
+   '../../../../public/loadable-stats.json');
+   
+   let html;
    let extractor;
+   let contentComponent;
 
-   let contentComponent: ReactElement;
-
-   if (pageRoute === 'pageOne') {
+   if (page === 'pageOne') {
      extractor = new ChunkExtractor({ statsFile, entrypoints: 'pageOne' });
      contentComponent = <PageOneApp />;
    }
 
-   if (pageRoute === 'pageTwo') {
+   if (page === 'pageTwo') {
      extractor = new ChunkExtractor({ statsFile, entrypoints: 'pageTwo' });
-     contentComponent = (
-       <PageTwoApp />
-     );
+     contentComponent = <PageTwoApp />
    }
 
-   if (pageRoute === 'pageThree') {
+   if (page === 'pageThree') {
      extractor = new ChunkExtractor({ statsFile, entrypoints: 'pageThree'] });
      contentComponent = <PageThreeApp />;
    }
 
-   try {
-     const jsx = (
-       <Provider store={store}>
-         {contentComponent}
-       </Provider>
-     );
+  const jsx = (
+    <Provider store={store}>
+      {contentComponent}
+    </Provider>
+  );
 
-     markup = renderToString(jsx);
-   } catch (error) {
-     return next(error);
-   }
+   html = renderToString(jsx);
 
    const scriptTags = extractor.getScriptTags();
    const linkTags = extractor.getLinkTags();
@@ -194,17 +186,13 @@ app.get('/', async (req, res, next) => {
    return res.status(200).send(
      `
      <!doctype html>
-     <html lang="en">
+     <html>
        <head>
-         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-         <meta charset="utf-8" />
-         <meta name="viewport" content="width=device-width,
-         initial-scale=1, maximum-scale=1.0, user-scalable=no">
          ${linkTags}
          ${styleTags}
        </head>
        <body>
-         <div id="root">${markup}</div>
+         <div id="root">${html}</div>
          ${scriptTags}
        </body>
      </html>
