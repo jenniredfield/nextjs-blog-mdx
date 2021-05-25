@@ -1,0 +1,197 @@
+import Head from 'next/head'
+import Layout, { siteTitle } from '../../components/wrapper'
+import Screenshot from '../../components/screenshot'
+
+<Layout>
+
+# Save Content Security Policy reports in AWS
+
+<Date>2021-05-17</Date>
+
+In this tutorial we will look into creating a Content Security Policy endpoint to save our websites’ CSP violation reports using AWS.
+
+We will go over creating a DynamoDB table to save the logs, and ways to save and retrieve logs via Lambda and the API Gateway service.
+
+I created these without the use of a framework, which would make things easier, but this was a good way to start learning AWS.
+
+## DynamoDB
+
+First, let’s create a table. Go to your AWS account, select a region (very important to remember where you are creating your services), type DynamoDB on the top Services search bar, click ‘Create Table’. This should take you to a screen where you can choose the name and table partition key. For this tutorial, we will name our table ‘csp-report’ and the partition key will be a string of named ID.
+
+<Screenshot imgUrl="https://res.cloudinary.com/jenniredfield/image/upload/v1621457676/Bird%20Dev%20Blog/CSP%20Report%20Post/csp-report-screenshot-1.png" alt="screenshot-1" />
+
+Click ‘Create’ at the bottom of the page.
+
+You should now see a list of your tables, if not, click on the left panel where it says ‘Tables’ to see your newly created table. Click on it, and let’s try now to create a CSP item on it. When you add a report URI to your CSP report, the browser will automatically send a object with the violation to that endpoint that looks like this:
+
+```js
+{
+  "csp-report": {
+    "document-uri": "http://example.com/signup.html",
+    "referrer": "",
+    "blocked-uri": "http://example.com/css/style.css",
+    "violated-directive": "style-src cdn.example.com",
+    "original-policy": "default-src 'none'; style-src cdn.example.com; report-uri /_/csp-reports",
+    "disposition": "report"
+  }
+}
+```
+
+We are only interested in the properties inside of csp-report, and just as an example, let’s create an item in our database to see what this would look like.
+
+On your newly created table, click ‘Items’. From there you can click ‘Create Item’.
+
+<Screenshot imgUrl="https://res.cloudinary.com/jenniredfield/image/upload/v1621457680/Bird%20Dev%20Blog/CSP%20Report%20Post/csp-report-screenshot-2.png" alt="screenshot-2" />
+
+
+This will open a pop up that allows you to edit and create the new item. In this example, I will choose the ‘Text’ format from the dropdown at the top right of the modal, and this allows us to copy and paste the object from the previous example more easily. Note that I’m giving it an extra property ‘id’ with the string ‘1’. This is important as this is an essential property your table is expecting, and this should always be an unique identifier.
+
+<Screenshot imgUrl="https://res.cloudinary.com/jenniredfield/image/upload/v1621457678/Bird%20Dev%20Blog/CSP%20Report%20Post/csp-report-screenshot-3.png" alt="screenshot-3" />
+
+We can see now our new item on our table! Great.
+
+<Screenshot imgUrl="https://res.cloudinary.com/jenniredfield/image/upload/v1621457679/Bird%20Dev%20Blog/CSP%20Report%20Post/csp-report-screenshot-4.png" alt="screenshot-4" />
+
+Create Policy for reading and writing the table, and for accessing CloudWatch
+
+Before we create our lambda function to access our database, we need to create a new policy to give it permissions to access it. It is best not to give full permissions to the Lambda for security reasons, so we will restrict access to only the methods we will need.
+
+Go to the top search bar and type ‘IAM’ to access the Identity and Access Management dashboard.
+
+<Screenshot imgUrl="https://res.cloudinary.com/jenniredfield/image/upload/v1621457680/Bird%20Dev%20Blog/CSP%20Report%20Post/csp-report-screenshot-5.png" alt="screenshot-5" />
+
+From there click ‘Policies’, ‘Create Policy’, select DynamoDB and start choosing the methods you want to give permission from the dropdown lists. In this example we will use the method ‘Scan’ from the Read dropdown, and the method ‘PutItem’ from the Write dropdown.
+
+<Screenshot imgUrl="https://res.cloudinary.com/jenniredfield/image/upload/v1621457680/Bird%20Dev%20Blog/CSP%20Report%20Post/csp-report-screenshot-7.png" alt="screenshot-7" />
+
+After this, we will specify which table we are giving the lambda access to, so on the ‘Resources’ section and on the option ‘table’ click ‘ADD ARN’, type in the region of your DynamoDB (in my case was eu-west-2 but for you might be different) and the name of your DynamoDB table, in this case csp-report. Click ‘Next’ > ‘Review’ and give a name to your policy, in my case I’ll call it cspReportDynamoAccess.
+
+## Create Role for Lambda
+
+Now we will create a Role for our Lambda to which we can attach as many policies as we like.
+Go back to the IAM dashboard and click ‘Roles’. Click ‘Create Role’ and select Lambda. On the next screen search and select oru new policy ‘cspReportDynamoAccess’. Also, search and select CloudWatchLogsFullAccess, this will give our Lambda access to CloudWatch and we will be able to see logs from our service. Click ‘Next’ > ‘Review’ and name your role cspReportLambdaRole. Click to accept.
+
+## Create Lambda
+
+To create a Lambda function, go to the Lambda Dashboard and click ‘Create Function’ > ‘Use Blueprint’. Now we are going to use the microservice-http blueprint.
+
+Name your lambda csp-report-lambda and use the existing role we created ‘cspReportLambdaRole’. Create a new API Gateway HTTP (you could use REST also, but in this example we will go with HTTP) with Security ‘Open’.
+Click ‘Create Function’.
+
+Now back in the Lambda dashboard, scroll down and click on the index.js of your lambda and paste the code below
+
+```js
+const AWS = require("aws-sdk");
+const dynamoDB = new AWS.DynamoDB({ region: "eu-west-2" });
+ 
+exports.handler = (event, context, cb) => {
+ 
+ const params = {
+   TableName: "csp-report",
+ };
+ 
+ const method = event.requestContext.http.method;
+ 
+ switch (method) {
+   case "GET":
+     return readTable(params, cb);
+   case "POST":
+     const paramsWithCspReport = {
+         ...params,
+         Item: AWS.DynamoDB.Converter.marshall({...event["csp-report"], id: String(Date.now())})
+     }
+     return postCspReport(paramsWithCspReport, cb);
+   default:
+     return cb(null, { message: "There is no HTTP method specified" });
+ }
+};
+ 
+function readTable(params, cb) {
+ dynamoDB.scan(params, (err, data) => {
+   if (err) {
+     console.log(err);
+     cb(err, { message: "An error has occurred reading the table" });
+   } else {
+     const unmarshalledData = data.Items.map((el) => {
+       return AWS.DynamoDB.Converter.unmarshall(el);
+     });
+ 
+     const response = {
+       statusCode: 200,
+       body: JSON.stringify(unmarshalledData),
+       headers: {
+         "Access-Control-Allow-Origin": "*",
+         "Access-Control-Allow-Credentials": true,
+       },
+     };
+ 
+     cb(null, response);
+   }
+ });
+}
+ 
+function postCspReport(params, cb) {
+ dynamoDB.putItem(params, (err, data) => {
+   if (err) {
+     cb(err, { message: "Error writing data" });
+   } else {
+     console.log(`Data is ${data}`);
+ 
+     cb(null, data);
+   }
+ });
+ 
+ cb(null, { message: "Success writing csp report" });
+}
+```
+
+
+Now let’s test our lambda alone before moving on to API Gateway. Paste this test, save and deploy. Now check execution, was posting of our CSP report successful? If not, we need to go back and fix our tests. We can use CloudWatch to check console logs from our lambda too if we need it.
+
+```js
+{
+  "csp-report": {
+    "document-uri": "http://example.com/signup.html",
+    "referrer": "",
+    "blocked-uri": "http://example.com/css/style.css",
+    "violated-directive": "style-src cdn.example.com",
+    "original-policy": "default-src 'none'; style-src cdn.example.com; report-uri /_/csp-reports",
+    "disposition": "report"
+  },
+  "requestContext": {
+      "http": { 
+          "method": "POST"
+      }
+  }
+}
+```
+
+## Create API Gateway
+
+If created with Blueprint, we will already have a HTTP API Gateway set up for us and deployed. To grab the method of the request, do event.requestContext.http.method in this case. 
+
+NOTE: Depending on how you set up your Api Gateway, you might have to extract the HTTP method in a different way from the event object that your lambda receives - this might be a topic for another post. I recommend console logging the event object when testing Api Gateway integration and check how your lambda is receiving this by checking CloudWatch. This is why we give our lambda permission access to CloudWatch logs!
+
+On to API Gateway dashboard, you can see the URLs of your endpoint, and don’t forget to add the path at the end of it to test it, for example https://{{YOUR_API_GATEWAY_URL}}/default/csp-report-lambda.
+
+Now, we can test it by sending a get request from the browser. It works!
+
+<Screenshot imgUrl="https://res.cloudinary.com/jenniredfield/image/upload/v1621457682/Bird%20Dev%20Blog/CSP%20Report%20Post/csp-report-screenshot-8.png" alt="screenshot-8" />
+
+We can also test posting a CSP report via POSTMAN. Let’s prepare a post request with our api gateway’s url:
+https://{{YOUR_API_GATEWAY_URL}}/default/csp-report-lambda. The body will be the same csp object template we have used above, selecting JSON as the format. To be more realistic, we will also add Content-Type: application/csp-report to the request’s Header.
+
+<Screenshot imgUrl="https://res.cloudinary.com/jenniredfield/image/upload/v1621459091/Bird%20Dev%20Blog/CSP%20Report%20Post/csp-report-screenshot-9.png" alt="screenshot-9" />
+
+Now on your application, you just need to add to your Content Security Policy a report-uri directive with  the value of your endpoint to start receiving reports!
+
+</Layout>
+
+export const meta = {
+  title: 'Save Content Security Policy reports in AWS',
+  author: 'J Bird',
+  id: 'save-csp-report-logs-in-aws',
+  description: 'Let\'s learn how to save CSP reports to AWS using API Gateway - Lambda - DynamoDB',
+  date: '2021-05-17',
+  tags: ['javascript', 'aws', 'csp report', 'dynamodb', 'apigateway', 'lambda']
+}
