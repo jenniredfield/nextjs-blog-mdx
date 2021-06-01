@@ -3,30 +3,33 @@ import Layout, { siteTitle } from '../../components/wrapper'
 
 <Layout>
 
-Deploy Express Server to AWS with Serverless
+# Deploy Express Server to AWS with Serverless
 
-This tutorial assumes you already have AWS credentials set up on your machine. If you don’t have it yet, please read instructions [here.] (https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
-Let’s create a simple express server to be uploaded to AWS lambda.
+<Date>2021-06-01</Date>
+
+This tutorial assumes you already have AWS credentials set up on your machine. If you don’t have it yet, please read instructions [here.](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
+
+Now, let’s create a simple express server to be uploaded to AWS lambda.
 
 Create folder, initialize npm and create app file:
 
 ```js
-	Mkdir express-aws-server
-	Cd express-aws-server
-	Npm init -y
-	Touch app.js
+	mkdir express-aws-server
+	cd express-aws-server
+	npm init -y
+	touch app.js
 ```
 
 You will need the serverless package installed either in the project’s folder or globally. To install globally:
 
 ```js
-	Npm install -g serverless
+	npm install -g serverless
 ```
 
-	Next we will install the express package and the serverless-http package that will help:
+Next we will install the express package and the serverless-http package that we will need to create the server and wrap it in the serverless handler:
 
 ```js
-	Npm install express serverless-http
+	npm install express serverless-http
 ```
 
 Let’s go to our app.js file and create a dead simple express server that handles a GET method:
@@ -46,7 +49,9 @@ console.log('listening...')
 })
 ```
 
-	The only difference to get it working in AWS would be to add the serverless-http package and wrap the server in the handler function: 
+
+The only difference to get it working in AWS would be to add the serverless-http package and wrap the server in the handler function:
+
 
 ```js
 const serverless = require('serverless-http');
@@ -64,12 +69,12 @@ module.exports.handler = serverless(app);
 Now let’s create a serverless.yml file that will describe our AWS stack:
 
 ```js
-Touch serverless.yml
+touch serverless.yml
 ```
 
 Paste the yaml below:
 
-```js
+```yaml
 service: express-aws-server
 provider:
  name: aws
@@ -97,7 +102,7 @@ Having a look through it, you can see this describes a service called ‘express
 Now on our command line, providing we are in the root folder, we can deploy this with:
 
 ```js
-Serverless deploy
+serverless deploy
 ```
 
 We should get the endpoint that we need given to us in the command line. Let’s go over to Postman and  try to send the GET request.
