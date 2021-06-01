@@ -48,10 +48,6 @@ h1 {
     overflow-x: scroll;
 }
 
-.prism-code::-webkit-scrollbar {
-  display: none;
-}
-
 .post-date {
   font-size: 14px;
   color: rgb(148, 148, 148);

@@ -1,0 +1,118 @@
+import Head from 'next/head'
+import Layout, { siteTitle } from '../../components/wrapper'
+
+<Layout>
+
+Deploy Express Server to AWS with Serverless
+
+This tutorial assumes you already have AWS credentials set up on your machine. If you don’t have it yet, please read instructions [here.] (https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
+Let’s create a simple express server to be uploaded to AWS lambda.
+
+Create folder, initialize npm and create app file:
+
+```js
+	Mkdir express-aws-server
+	Cd express-aws-server
+	Npm init -y
+	Touch app.js
+```
+
+You will need the serverless package installed either in the project’s folder or globally. To install globally:
+
+```js
+	Npm install -g serverless
+```
+
+	Next we will install the express package and the serverless-http package that will help:
+
+```js
+	Npm install express serverless-http
+```
+
+Let’s go to our app.js file and create a dead simple express server that handles a GET method:
+
+```js
+const express = require('express');
+const app = express();
+ 
+app.use(express.urlencoded({ extended: true }));
+ 
+app.get('/my-aws-endpoint', (req, res) => {
+   res.send('Successfully reached GET endpoint')
+});
+ 
+app.listen(3000, () => {
+console.log('listening...')
+})
+```
+
+	The only difference to get it working in AWS would be to add the serverless-http package and wrap the server in the handler function: 
+
+```js
+const serverless = require('serverless-http');
+ 
+const express = require('express');
+const app = express();
+ 
+app.get('/my-aws-endpoint', (req, res) => {
+   res.send('Successfully reached GET endpoint')
+});
+ 
+module.exports.handler = serverless(app);
+```
+
+Now let’s create a serverless.yml file that will describe our AWS stack:
+
+```js
+Touch serverless.yml
+```
+
+Paste the yaml below:
+
+```js
+service: express-aws-server
+provider:
+ name: aws
+ runtime: nodejs10.x
+ stage: dev
+ region: eu-west-2
+ memorySize: 128
+functions:
+ app:
+   handler: app/app.handler
+   events:
+     - http:
+
+         path: /
+         method: ANY
+         cors: true
+     - http:
+         path: /{proxy+}
+         method: ANY
+         cors: true
+```
+
+Having a look through it, you can see this describes a service called ‘express-aws-server, with aws as the provider, stage dev, region eu-west-2 (if you can’t find your service in AWS console, you could be looking in the wrong region). We create a function app that will get triggered by a http event under ANY path - this means all HTTP methods will be forwarded to our express server, no need to configure our Api Gateway which, by the way, will be created automatically when we deploy this configuration.
+
+Now on our command line, providing we are in the root folder, we can deploy this with:
+
+```js
+Serverless deploy
+```
+
+We should get the endpoint that we need given to us in the command line. Let’s go over to Postman and  try to send the GET request.
+
+After sending the request in Postman, If you can’t see a successful response go to the AWS console - Lambda and send a test from there, any payload will do. You should see any error by expanding the details of the execution and should be able to fix it.
+
+If you received the response as we defined it though, no need to worry, you successfully deployed your first serverless express application!
+
+</Layout>
+
+export const meta = {
+  title: 'Deploy Express Server to AWS with Serverless',
+  author: 'J Bird',
+  id: 'create-express-server-deploy-to-aws',
+  description: 'Create a simple express server and deploy easily to AWS with the serverless framework',
+  date: '2021-06-01',
+  tags: ['javascript', 'express', 'server', 'node', 'serverless', 'aws']
+}
