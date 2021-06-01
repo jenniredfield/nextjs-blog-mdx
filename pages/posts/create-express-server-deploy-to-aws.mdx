@@ -26,7 +26,7 @@ You will need the serverless package installed either in the project’s folder 
 	npm install -g serverless
 ```
 
-Next we will install the express package and the serverless-http package that we will need to create the server and wrap it in the serverless handler:
+Next we will install the express package and the serverless-http package that we will need:
 
 ```js
 	npm install express serverless-http
@@ -50,7 +50,7 @@ console.log('listening...')
 ```
 
 
-The only difference to get it working in AWS would be to add the serverless-http package and wrap the server in the handler function:
+The only difference to get it working in AWS would be to remove the express listener and add the serverless-http package to wrap the server in the handler function:
 
 
 ```js
