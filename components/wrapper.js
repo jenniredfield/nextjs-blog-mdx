@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 const name = 'Bird Dev'
 const headerImageUrl = "/images/kiss-bird.png"
-const thumbnailImageUrl = "/images/bird-dev-thumbnail.png"
+const thumbnailImageUrl = "./images/bird-dev-thumbnail.png"
 export const siteTitle = 'Bird Dev'
 
 export default function Layout({ children, home }) {
