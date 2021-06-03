@@ -13,7 +13,7 @@ Now, let’s create a simple express server to be uploaded to AWS lambda.
 
 Create folder, initialize npm and create app file:
 
-```js
+```shell
 	mkdir express-aws-server
 	cd express-aws-server
 	npm init -y
@@ -22,13 +22,13 @@ Create folder, initialize npm and create app file:
 
 You will need the serverless package installed either in the project’s folder or globally. To install globally:
 
-```js
+```shell
 	npm install -g serverless
 ```
 
 Next we will install the express package and the serverless-http package that we will need:
 
-```js
+```shell
 	npm install express serverless-http
 ```
 
@@ -68,13 +68,13 @@ module.exports.handler = serverless(app);
 
 Now let’s create a serverless.yml file that will describe our AWS stack:
 
-```js
+```shell
 touch serverless.yml
 ```
 
 Paste the yaml below:
 
-```yaml
+```yml
 service: express-aws-server
 provider:
  name: aws
@@ -87,7 +87,6 @@ functions:
    handler: app/app.handler
    events:
      - http:
-
          path: /
          method: ANY
          cors: true
@@ -101,7 +100,7 @@ Having a look through it, you can see this describes a service called ‘express
 
 Now on our command line, providing we are in the root folder, we can deploy this with:
 
-```js
+```shell
 serverless deploy
 ```
 
