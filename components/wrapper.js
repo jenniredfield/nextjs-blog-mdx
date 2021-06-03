@@ -13,7 +13,6 @@ export default function Layout({ children, home }) {
     <div className={styles.container}>
       <Head>
         <link rel="icon" href="/favicon.ico" />
-        <meta name="description" content="Bird dev" />
         <meta property="og:image" content={thumbnailImageUrl} />
         <meta name="og:title" content={siteTitle} />
         <meta
