@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 const name = 'Bird Dev';
 const headerImageUrl = '/images/kiss-bird.png';
-const thumbnailImageUrl = './images/bird-dev-thumbnail.png';
+const thumbnailImageUrl = '/images/bird-dev-thumbnail.png';
 export const siteTitle = 'Bird Dev';
 
 export default function Layout({ children, home }) {
@@ -17,7 +17,7 @@ export default function Layout({ children, home }) {
         <meta name="og:title" content={siteTitle} />
         <meta
           name="description"
-          content="A evelopment blog to share what we learned in the day"
+          content="A development blog to share what we learned in the day"
         ></meta>
         <meta name="twitter:card" content="summary_large_image" />
         <meta
