@@ -1,29 +1,30 @@
-import Head from 'next/head'
-import styles from './wrapper.module.css'
-import utilStyles from '../styles/utils.module.css'
-import Link from 'next/link'
+import Head from 'next/head';
+import styles from './wrapper.module.css';
+import utilStyles from '../styles/utils.module.css';
+import Link from 'next/link';
 
-const name = 'Bird Dev'
-const headerImageUrl = "/images/kiss-bird.png"
-const thumbnailImageUrl = "./images/bird-dev-thumbnail.png"
-export const siteTitle = 'Bird Dev'
+const name = 'Bird Dev';
+const headerImageUrl = '/images/kiss-bird.png';
+const thumbnailImageUrl = './images/bird-dev-thumbnail.png';
+export const siteTitle = 'Bird Dev';
 
 export default function Layout({ children, home }) {
   return (
     <div className={styles.container}>
       <Head>
         <link rel="icon" href="/favicon.ico" />
+        <meta name="description" content="Bird dev" />
+        <meta property="og:image" content={thumbnailImageUrl} />
+        <meta name="og:title" content={siteTitle} />
         <meta
           name="description"
-          content="Bird dev"
-        />
-          <meta
-          property="og:image"
-          content={thumbnailImageUrl}
-        />
-        <meta name="og:title" content={siteTitle} />
+          content="A evelopment blog to share what we learned in the day"
+        ></meta>
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="viewport" content="initial-scale=1.0, width=device-width"></meta>
+        <meta
+          name="viewport"
+          content="initial-scale=1.0, width=device-width"
+        ></meta>
       </Head>
       <header className={styles.header}>
         {home ? (
@@ -63,5 +64,5 @@ export default function Layout({ children, home }) {
         </div>
       )}
     </div>
-  )
+  );
 }
